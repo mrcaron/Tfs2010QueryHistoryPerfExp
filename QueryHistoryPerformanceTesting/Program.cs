@@ -32,38 +32,27 @@ namespace QueryHistoryPerformanceTesting
         };
 
         static int NUM_RUNS = 5;
-        static void Main(string[] args)
+
+        public delegate TimeSpan RunTestDelegate();
+
+        static void DoTest(RunTestDelegate f, string name)
         {
             var results = new List<TimeSpan>();
-
             for (int i = NUM_RUNS; i > 0; i--)
             {
                 results.Add(RunTestParallelPreAlloc());
             }
-            Console.WriteLine("Parallel Pre-Alloc: Execution Time Average (ms): " + results.Select(t => t.TotalMilliseconds).Average());
-
-            results.Clear();
-            for (int i = NUM_RUNS; i > 0; i--)
-            {
-                results.Add(RunTestParallelAllocOnDemand());
-            }
-            Console.WriteLine("Parallel AllocOnDemand: Execution Time Average (ms): " + results.Select(t => t.TotalMilliseconds).Average());
-            
-            results.Clear();
-            for (int i = NUM_RUNS; i > 0; i--)
-            {
-                results.Add(RunTestParallelSameClient());
-            }
-            Console.WriteLine("Parallel-SameClient: Execution Time Average (ms): " + results.Select(t => t.TotalMilliseconds).Average());
-
-            results.Clear();
-            for (int i = NUM_RUNS; i > 0; i--)
-            {
-                results.Add(RunTestSerial());
-            }
-            Console.WriteLine("Serial: Execution Time Average (ms): " + results.Select(t => t.TotalMilliseconds).Average());
+            Console.WriteLine("{0}: Execution Time Average (ms): {1} ", name, results.Select(t => t.TotalMilliseconds).Average());
         }
 
+        static void Main(string[] args)
+        {
+            DoTest(new RunTestDelegate(RunTestParallelPreAlloc), "Parallel Pre-Alloc");
+            DoTest(new RunTestDelegate(RunTestParallelAllocOnDemand), "Parallel Alloc OnDemand");
+            DoTest(new RunTestDelegate(RunTestParallelSameClient), "Parallel SameClient");
+            DoTest(new RunTestDelegate(RunTestSerial), "Serial");
+        }
+        
         static TimeSpan RunTestParallelPreAlloc()
         {
             var paths = new List<ThrArg>();
